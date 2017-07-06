@@ -1,5 +1,4 @@
 <?php 	
-use Hassansin\DBCart\Models\Cart;
 if ( ! function_exists('slugify')) {
   function slugify($text)
   {

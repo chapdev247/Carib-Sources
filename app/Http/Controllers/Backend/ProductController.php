@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Backend;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Backend\Controller;
 use App\Models\Backend\Product;
+use App\Models\Backend\Category;
 use Storage;
 use Image;
+use Validator;
 
 class ProductController extends Controller
 {
@@ -15,76 +17,21 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getindex()
+    public function index(Request $request)
     {
-        $products = Product::orderBy('id','desc')->paginate(30);
-        return view('backend.products.index')->withProducts($products);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function getcreate($type)
-    {
-        if ($type!=0 && $type!=1) dd("Not My Type");
-        return view('backend.products.create')->withType($type);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function poststore(Request $request)
-    {
-        $this->validate($request, array(
-                'name' => 'required|max:190',
-                'sku' => 'required|unique:products,sku|alpha_dash|min:5|max:190',
-                'qty' => 'required',
-                'price' => 'required',
-                'featured_image' => 'image|dimensions:min_width=350,min_height=350',
-                'description' => 'required',
-                'product_info' => 'required',
-            ));
-
-        $product = new Product;
-        
-        $product->name = $request->name;
-        if ($request->sku) 
-            $product->sku = $request->sku;
-        else
-            $product->sku = slugify($request->name);
-        $product->qty = $request->qty;
-        $product->price = $request->price;
-        $product->description = $request->description;
-        $product->product_info = $request->product_info;
-
-        if (  $request->hasFile('featured_image') ) {
-
-            $image = $request->file('featured_image');
-            $filename = time().".".$image->getClientOriginalExtension();
-            $img_path = 'uploads/products/'.$filename;
-            $thumb_path = 'uploads/products/thumb/'.$filename;
-
-            $img = Image::make($image);
-            $img->save( public_path($img_path) );
-
-            $img->resize(300, null, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save( public_path($thumb_path) );
-            
-            $product->thumb_image = $thumb_path;
-            $product->image = $img_path;
+        $data["title"] = "Admin: Products";
+        $data["products"] = Product::filter_products($request)->paginate(30);
+        $data["categories"] = Category::where('status',1)->orderBy('id', 'asc')->get();
+        if (!empty($data['categories'])) {
+            $data['cat_select'][""] = "select category";
+            foreach ($data['categories'] as $cat){
+                if ($cat->parent!=0) {
+                    $parent = $data['categories']->where('id',$cat->parent)->first()->name;
+                    $data['cat_select'][$parent][$cat->id] = $cat->name;
+                }
+            }
         }
-        $product->save();
-
-        $request->session()->flash('success_msg','The product added successfully.');
-
-        return redirect()->route('ProductController.getedit',$product->id);
+        return view('backend.products.index')->with('data',$data);
     }
 
     /**
@@ -93,10 +40,20 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function getedit($id)
+    public function edit($id)
     {
-        $product = Product::find($id);
-        return view('backend.products.edit')->withProduct($product);
+        $data["title"] = "Admin: Product Edit";
+        $data["product"] = Product::find($id);
+        $data["categories"] = Category::where('status',1)->orderBy('id', 'asc')->get();
+        if (!empty($data['categories'])) {
+            foreach ($data['categories'] as $cat){
+                if ($cat->parent!=0) {
+                    $parent = $data['categories']->where('id',$cat->parent)->first()->name;
+                    $data['cat_select'][$parent][$cat->id] = $cat->name;
+                }
+            }
+        }
+        return view('backend.products.edit')->with('data',$data);
     }
 
     /**
@@ -106,58 +63,61 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function postupdate(Request $request, $id)
+    public function update_product(Request $request, $id)
     {
-        $this->validate($request, array(
-                'name' => 'required|max:190',
-                'sku' => 'required|unique:products,sku,'.$id.'|alpha_dash|min:5|max:190',
-                'qty' => 'required',
-                'price' => 'required',
-                'featured_image' => 'image|dimensions:min_width=350,min_height=350',
-                'description' => 'required',
-                'product_info' => 'required',
-            ));
+        $rules = array(
+                'name' => 'required|max:190|unique:products,name,'.$id,
+                'category' => 'required',
+                'slug' => 'required|unique:products,slug,'.$id.'|alpha_dash',
+                'price' => 'required|numeric|min:1',
+                'description' => 'required|max:5000',
+            );
+        $input = $request->input();
+
+        if (  $request->hasFile('image') ) {
+            $files = $request->file('image');
+            foreach($files as $index => $file) {
+                $i_rules['image###'.($index+1)] = 'mimes:png,gif,jpeg,jpg|dimensions:min_width=440,min_height=480|max:2048';
+                $i_input['image###'.($index+1)] = $file;
+            }
+            $input = array_merge($input,$i_input);
+            $rules = array_merge($rules,$i_rules);
+        }
+        Validator::make($input, $rules)->validate();
 
         $product = Product::find($id);
         
         $product->name = $request->name;
-        if ($request->sku) 
-            $product->sku = $request->sku;
-        else
-            $product->sku = slugify($request->name);
-        $product->qty = $request->qty;
+        $product->category_id = $request->category;
+        $product->slug = slugify($request->slug);
         $product->price = $request->price;
         $product->description = $request->description;
-        $product->product_info = $request->product_info;
 
-        if (  $request->hasFile('featured_image') ) {
+        if (  $request->hasFile('image') ) {
+            $old_thumbs = json_decode($product->thumb_image,TRUE);
+            $old_imgs = json_decode($product->image,TRUE);
+            $images = $request->file('image');
+            foreach ($images as $key => $image) {
+                $filename = substr(md5(rand()),0,9)."_".time().".".$image->getClientOriginalExtension();
+                $img_path = 'uploads/products/'.$filename;
+                $thumb_path = 'uploads/products/thumb/'.$filename;
 
-            $old_thumb = $product->thumb_image;
-            $old_img = $product->image;
-            $image = $request->file('featured_image');
-            $filename = time().".".$image->getClientOriginalExtension();
-            $img_path = 'uploads/products/'.$filename;
-            $thumb_path = 'uploads/products/thumb/'.$filename;
-
-            $img = Image::make($image);
-            $img->save( public_path($img_path) );
-
-            $img->resize(300, null, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save( public_path($thumb_path) );
-                
-            Storage::delete( $old_thumb );
-            Storage::delete( $old_img );
-
-            $product->thumb_image = $thumb_path;
-            $product->image = $img_path;
+                $img = Image::make($image);
+                $img->save( public_path($img_path) );
+                $img->resize(220,240);
+                $img->save( public_path($thumb_path) );
+                $thumb_images[$key] = $thumb_path;
+                $original_images[$key] = $img_path;
+            }
+            $product->thumb_image = json_encode(array_merge($old_thumbs,$thumb_images));
+            $product->image = json_encode(array_merge($old_imgs,$original_images));
         }
+
         $product->save();
 
-        $request->session()->flash('success_msg','The product Updated successfully!');
+        $request->session()->flash('success_msg','The product updated successfully.');
 
-        return redirect()->route('ProductController.getedit',$product->id);
+        return response()->json(array('data'=> "Data Submitted successfully."),200);
     }
 
     /**
@@ -166,22 +126,81 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function getdestroy($id)
+    public function destroy(Request $request,$id)
     {
         $product = Product::find($id);
 
-        $old_thumb = $product->thumb_image;
+        $old_thumbs = json_decode($product->thumb_image);
 
-        $old_img = $product->image;
+        $old_imgs = json_decode($product->image);
 
         $product->delete();
 
-        Storage::delete( $old_thumb );
-        
-        Storage::delete( $old_img );
+        if (!empty($old_thumbs)) {
+            foreach ($old_thumbs as $key => $old_thumb) {
+
+                @unlink( 'public/'.$old_thumb );
+                
+                @unlink( 'public/'.$old_imgs[$key] );
+            }
+        }
 
         $request->session()->flash('success_msg' , 'The Product deleted successfully');
 
-        return redirect()->route('ProductController.getindex');
+        return redirect()->back();
+    }
+
+    public function status(Request $request,$id)
+    {
+        $product = Product::find($id);
+        if (!empty($product)) {
+            if ($product->status) 
+                $product->status = 0;
+            else
+                $product->status = 1;
+
+            $product->save();
+
+            $request->session()->flash('success_msg' , 'The Product status updated successfully.');
+        }
+        else{
+            $request->session()->flash('success_error' , 'The Product not found.Please try again.');
+        }
+
+        return redirect()->route('products.index');
+    }
+    
+    public function delete_image(Request $request,$id,$img_id)
+    {
+        $product = Product::find($id);
+        if (!empty($product)) {
+
+            $images = json_decode($product->image,TRUE);
+            $thumb_images = json_decode($product->thumb_image,TRUE);
+            if (!empty($images) && !empty($images[$img_id])) {
+
+                @unlink( 'public/'.$thumb_images[$img_id] );
+                
+                @unlink( 'public/'.$images[$img_id] );
+
+                unset($images[$img_id]);
+                unset($thumb_images[$img_id]);
+
+                $product->image = json_encode(array_values($images));
+                $product->thumb_image = json_encode(array_values($thumb_images));
+
+                $product->save();
+
+                $request->session()->flash('success_msg' , 'The Product image deleted successfully.');
+            }
+            else{
+                $request->session()->flash('success_error' , 'The image not found.Please try again.');
+            }
+        }
+        else{
+            $request->session()->flash('success_error' , 'The Product not found.Please try again.');
+        }
+
+        return redirect()->back();
     }
 }

@@ -39,8 +39,8 @@
 				<div class="portlet-body form">
 					{!!  Form::open( ['route'=> ['categories.store'],'method' => 'POST','class'=>"form-horizontal"] ) !!}
 						<div class="form-body">			
-							<div class="form-group form-md-line-input">
-								<label class="col-md-2 control-label" for="name">Category Name</label>
+							<div class="form-group">
+								<label class="col-md-2 control-label" for="name">Category Name<span class="text-danger">* </span>:</label>
 								<div class="col-md-10">
 									<div class="input-icon right">
 										{{ Form::text('name',null, ['class'=> 'form-control','placeholder'=>'Enter Category Name','id'=>'name','onkeyup'=>"slugify(this,'slug')",'autocomplete'=>'off']) }}
@@ -55,8 +55,8 @@
 			                        @endif
 								</div>
 							</div>
-							<div class="form-group form-md-line-input">
-								<label class="col-md-2 control-label" for="name">Category Slug</label>
+							<div class="form-group">
+								<label class="col-md-2 control-label" for="name">Category Slug<span class="text-danger">* </span>:</label>
 								<div class="col-md-10">
 									<div class="input-icon right">
 										{{ Form::text('slug',null, ['class'=> 'form-control','placeholder'=>'Enter Category slug','id'=>'slug','autocomplete'=>'off']) }}
@@ -71,13 +71,12 @@
 			                        @endif
 								</div>
 							</div>
-							<div class="form-group form-md-line-input">
+							<div class="form-group">
 								<label class="col-md-2 control-label" for="is_root">Is Subcategory?</label>
 								<div class="col-md-10">
 									<div class="md-checkbox-inline">
 										<div class="md-checkbox">
 											{{ Form::checkbox('is_root',1,true,['class'=> 'md-check','id'=>'is_root','onclick'=>"show_hide('parent_div',this.checked)"]) }}
-											{{-- <input type="checkbox" id="is_root" class="md-check" name="is_root" value="1" checked="" onclick="show_hide('parent_div',this.checked)"> --}}
 											<label for="is_root">
 											<span class="inc"></span>
 											<span class="check"></span>
@@ -86,8 +85,8 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group form-md-line-input" id="parent_div">
-								<label class="col-md-2 control-label" for="parent">Parent Category</label>
+							<div class="form-group" id="parent_div">
+								<label class="col-md-2 control-label" for="parent">Parent Category<span class="text-danger">* </span>:</label>
 								<div class="col-md-10">
 									{{ Form::select('parent', $data['cat_select'] , null, ['placeholder' => 'Select Category','class'=>"form-control",'id'=>"parent"]) }}
 									<div class="form-control-focus">

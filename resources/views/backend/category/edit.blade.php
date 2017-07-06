@@ -40,15 +40,10 @@
 					@if ($data['category'])
 						{!!  Form::open( ['route'=> ['categories.update',$data['category']->id],'method' => 'PUT','class'=>"form-horizontal"] ) !!}
 							<div class="form-body">			
-								<div class="form-group form-md-line-input">
-									<label class="col-md-2 control-label" for="name">Category Name</label>
-									<div class="col-md-10">
-										<div class="input-icon right">
-											{{ Form::text('name',$data['category']->name, ['class'=> 'form-control','placeholder'=>'Enter Category Name','id'=>'name','onkeyup'=>"slugify(this,'slug')",'autocomplete'=>'off']) }}
-											<div class="form-control-focus">
-											</div>
-											{{-- <span class="help-block">Category Name must be unique.</span> --}}
-										</div>
+								<div class="form-group">
+									<label class="col-md-3 control-label" for="name">Category Name<span class="text-danger">* </span> :</label>
+									<div class="col-md-9">
+										{{ Form::text('name',$data['category']->name, ['class'=> 'form-control','placeholder'=>'Enter Category Name','id'=>'name','onkeyup'=>"slugify(this,'slug')",'autocomplete'=>'off']) }}
 										@if ($errors->first('name'))
 				                            <p class="text-danger">
 				                                {{ $errors->first('name') }}
@@ -56,15 +51,10 @@
 				                        @endif
 									</div>
 								</div>
-								<div class="form-group form-md-line-input">
-									<label class="col-md-2 control-label" for="name">Category Slug</label>
-									<div class="col-md-10">
-										<div class="input-icon right">
-											{{ Form::text('slug',$data['category']->slug, ['class'=> 'form-control','placeholder'=>'Enter Category slug','id'=>'slug','autocomplete'=>'off']) }}
-											<div class="form-control-focus">
-											</div>
-											{{-- <span class="help-block">Category Slug must be unique.</span> --}}
-										</div>
+								<div class="form-group">
+									<label class="col-md-3 control-label" for="name">Category Slug<span class="text-danger">* </span> :</label>
+									<div class="col-md-9">
+										{{ Form::text('slug',$data['category']->slug, ['class'=> 'form-control','placeholder'=>'Enter Category slug','id'=>'slug','autocomplete'=>'off']) }}
 										@if ($errors->first('slug'))
 				                            <p class="text-danger">
 				                                {{ $errors->first('slug') }}
@@ -72,28 +62,25 @@
 				                        @endif
 									</div>
 								</div>
-								{{$data['categories']->where("parent",$data['category']->id)}}
 								@if(!$data['categories']->where("parent",$data['category']->id)->first())
-									<div class="form-group form-md-line-input">
-										<label class="col-md-2 control-label" for="is_root">Is Subcategory?</label>
-										<div class="col-md-10">
+									<div class="form-group">
+										<label class="col-md-3 control-label" for="is_root">Is Subcategory  :</label>
+										<div class="col-md-9">
 											<div class="md-checkbox-inline">
 												<div class="md-checkbox">
 													{{ Form::checkbox('is_root',1,$data['category']->parent,['class'=> 'md-check','id'=>'is_root','onclick'=>"show_hide('parent_div',this.checked)"]) }}
 													<label for="is_root">
 													<span class="inc"></span>
 													<span class="check"></span>
-													<span class="box"></span>Is Subcategory </label>
+													<span class="box"></span>Is Subcategory</label>
 												</div>
 											</div>
 										</div>
 									</div>
-									<div class="form-group form-md-line-input" id="parent_div">
-										<label class="col-md-2 control-label" for="parent">Parent Category</label>
-										<div class="col-md-10">
+									<div class="form-group" id="parent_div">
+										<label class="col-md-3 control-label" for="parent">Parent Category<span class="text-danger">* </span> :</label>
+										<div class="col-md-9">
 											{{ Form::select('parent', $data['cat_select'] , $data['category']->parent?$data['category']->parent:null, ['placeholder' => 'Select Category','class'=>"form-control",'id'=>"parent"]) }}
-											<div class="form-control-focus">
-											</div>
 											@if ($errors->first('parent'))
 					                            <p class="text-danger">
 					                                {{ $errors->first('parent') }}

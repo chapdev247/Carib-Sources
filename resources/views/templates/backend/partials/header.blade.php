@@ -31,6 +31,30 @@
 <link href="{{asset('public/')}}/theme/assets/admin/layout/css/layout.css" rel="stylesheet" type="text/css"/>
 <link href="{{asset('public/')}}/theme/assets/admin/layout/css/themes/darkblue.css" rel="stylesheet" type="text/css" id="style_color"/>
 <link href="{{asset('public/')}}/theme/assets/admin/layout/css/custom.css" rel="stylesheet" type="text/css"/>
+<style type="text/css">
+  	.section_loader {
+		position: absolute;
+		left: 0%;
+		top: 0%;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(255,255,255,0.8);
+		z-index: 9;
+		text-align: center;
+  	}
+  	.section_loader img {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		margin-left: -50px;
+		height: 100px;
+		margin-top: -50px;
+		width: 100px;
+  	}
+  	.loader_wrap {
+      	position: relative;
+  	}
+</style>
 @yield("stylesheets")
 <!-- END THEME STYLES -->
 <link rel="shortcut icon" href=""/>

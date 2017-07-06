@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class CommonMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    /**
+     * Create a new message instance.
+     *
+     * @return void
+     */
+    protected $data;
+    /**
+     * Create a new message instance.
+     *
+     * @return void
+     */
+    public function __construct($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build()
+    {
+        $data = $this->data;
+
+        $this->from($data["from_email"], $data["from_name"]);
+
+        $this->to($data["to_email"], $data["to_name"]);
+    
+        $this->subject($data["subject"]);
+
+        return $this->view($data["template"])->with('data',$data);
+    }
+}

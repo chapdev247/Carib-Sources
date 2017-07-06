@@ -44,15 +44,10 @@
                         </li>
                         <li>
                             <a href="{{ route('admin.logout') }}">
-                                <i class="icon-key"></i> Logout
+                                <i class="icon-logout"></i></i> Logout
                             </a>
                         </li>
                     </ul>
-                </li>
-                <li class="dropdown dropdown-quick-sidebar-toggler">
-                    <a href="javascript:;" class="dropdown-toggle">
-                    <i class="icon-logout"></i>
-                    </a>
                 </li>
                 <!-- END QUICK SIDEBAR TOGGLER -->
             </ul>

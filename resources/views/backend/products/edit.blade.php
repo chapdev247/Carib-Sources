@@ -1,133 +1,229 @@
 @extends('templates/backend/layout')
 
-@section('title','| Add Product')
+@section('title',$data["title"])
 
 @section('stylesheets')
-	{!! Html::style("public/css/parsley.css") !!}
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css">
+<style>
+.container {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.image {
+  opacity: 1;
+  display: block;
+  height: auto;
+  transition: .5s ease;
+  backface-visibility: hidden;
+}
+
+.middle {
+  transition: .5s ease;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%)
+}
+
+.container:hover .image {
+  opacity: 0.3;
+}
+
+.container:hover .middle {
+  opacity: 1;
+}
+</style>
 @endsection
 
 @section('mainBody')
-    <div id="page-wrapper">
-        <div class="row">
-            <div class="col-lg-12">
-                <h1 class="page-header">Edit Product</h1>
-                {!!  Form::model($product, ['route'=> ['ProductController.postupdate',$product->id],'method' => 'POST', 'data-parsley-validate' => '','files'=>true] ) !!}
+    <div class="page-content-wrapper">
+        <div class="page-content loader_wrap">
+            <div class="section_loader" id="search_loader">
+                <img src="{{asset('public')}}/img/loading-new.gif" alt="Loading..">
+            </div>
+            @include('templates/backend/partials/messages')
+            <h3 class="page-title">Product Management<small> Product Edit</small></h3>
+            <div class="page-bar">
+                <ul class="page-breadcrumb">
+                    <li>
+                        <i class="fa fa-home"></i>
+                        <a href="{{route('admin.dashboard')}}">Dashboard</a>
+                        <i class="fa fa-angle-right"></i>
+                    </li>
+                    <li>
+                        <i class="fa fa-cubes"></i>
+                        <a href="{{route('products.index')}}">Product List</a>
+                        <i class="fa fa-angle-right"></i>
+                    </li>
+                    <li>
+                        Product Edit
+                    </li>
+                </ul>
+                <div class="page-toolbar">
+                    <div class="btn-group pull-right">
+                    </div>
+                </div>
+            </div>
+            <div class="portlet light bordered">
+                <div class="portlet-title">
+                    <div class="caption font-green-haze">
+                        <i class="icon-settings font-green-haze"></i>
+                        <span class="caption-subject bold uppercase"> Edit Product</span>
+                    </div>
+                    <div class="actions">
+                        <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title="">
+                        </a>
+                    </div>
+                </div>
+                <div class="portlet-body form">
+                    @if ($data['product'])
+                        {!! Form::open(['route'=> ['products.update_product',$data["product"]->id],'method' => 'POST','class'=>'form-horizontal','files'=>true,'name'=>'product_edit'] ) !!}
+                            <div class="form-body"> 
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label" for="name">Product Name<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                        {{Form::text( 'name',$data["product"]->name,array('class' => 'form-control', 'autocomplete' => 'off' ,'onkeyup'=>"slugify(this,'slug')" ,'id'=>'name' ) )}}
+                                        <p class="text-danger name">
+                                            @if ($errors->first('name'))
+                                              {{ $errors->first('name') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
 
-                    {{Form::label('name','Product Name: ')}}<span class=""></span>
-                    {{Form::text( 'name',null,array('class' => 'form-control', 'autocomplete' => 'off', 'data-parsley-required' => '', 'data-parsley-maxlength'=>'190'  ,'onkeyup'=>"slugify(this,'sku')" ) )}}
-                    @if ($errors->first('name'))
-                        <p class="text-danger">
-                            {{ $errors->first('name') }}
-                        </p>
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label" for="slug">Product Slug<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                        {{Form::text( 'slug',$data["product"]->slug,array('class' => 'form-control' ,'id'=>'slug' ) ) }}
+                                        <p class="text-danger slug">
+                                            @if ($errors->first('slug'))
+                                              {{ $errors->first('slug') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label" for="category">Product Category<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                        {{ Form::select('category', $data['cat_select'] , $data["product"]->category_id, ['placeholder' => 'Select Product Category','class'=>"form-control",'id'=>"category"]) }}
+                                        <p class="text-danger category">
+                                            @if ($errors->first('category'))
+                                              {{ $errors->first('category') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label" for="price">Product Price<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                        {{Form::text( 'price',$data["product"]->price,array('class' => 'form-control' ,'id'=>'price' ) )}}
+                                        <p class="text-danger price">
+                                            @if ($errors->first('price'))
+                                              {{ $errors->first('price') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label" for="price">Product Images<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                        <?php $images = json_decode($data["product"]->thumb_image);
+                                        if(!empty($images)){
+                                            foreach ($images as $key => $image) { ?>
+                                                <div class="container col-md-3">
+                                                    <img src="{{ asset('public/'.$image) }}" width="200px" class="image img-responsive">
+                                                    <div class="middle">
+                                                        <a href="{{ route('products.delete_image',[$data['product']->id, $key]) }}" class="btn btn-sm btn-danger fa fa-trash-o" onclick="return confirm('Are you sure you want to delete this image?')" ></a>
+                                                    </div>
+                                                </div>
+                                                <?php
+                                            } 
+                                        }?>
+                                        {{ Form::file('image[]', ['class'=> 'form-control' ,'id'=>'name' ,'placeholder'=>'Enter Product image','id'=>'image','multiple'=>true]) }}
+                                        <ul class="text-success">
+                                            <li>Allowed image types are png, gif, jpeg, jpg.</li>
+                                            <li>Image dimensions must be atleast 440X480.</li>
+                                            <li>Maximum image size is 2MB.</li>
+                                        </ul>
+                                        <p class="text-danger image">
+                                            @if ($errors->first('image'))
+                                              {{ $errors->first('image') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                            		<label class="col-md-3 control-label" for="description">Product Description<span class="text-danger">* </span> :</label>
+                                    <div class="col-md-9">
+                                		{{Form::textarea( 'description',$data["product"]->description,array('class' => 'form-control' ,'id'=>'description' ) )}}
+                                        <p class="text-danger description">
+                            		      @if ($errors->first('description'))
+                        			            {{ $errors->first('description') }}
+                        			     @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="form-actions margin-top-10">
+                                    <div class="row">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <a href="{{route('products.index')}}" class="btn default">Cancel</a>
+                                            <button type="submit" class="btn blue">Submit</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    	{!! Form::close() !!}
+                    @else
+                        <script>
+                            window.location.href = '{{route('products.index')}}';
+                        </script>
                     @endif
-
-                    {{Form::label('sku','Sku: ')}}
-                    {{Form::text( 'sku',null,array('class' => 'form-control', 'data-parsley-required' => '', 'data-parsley-minlength'=>'5', 'data-parsley-maxlength'=>'190', 'data-parsley-pattern'=>"/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/" ) ) }}
-                    @if ($errors->first('sku'))
-                        <p class="text-danger">
-                            {{ $errors->first('sku') }}
-                        </p>
-                    @endif
-
-                    {{Form::label('qty','In Stock: ')}}
-                    {{Form::text( 'qty',null,array('class' => 'form-control', 'data-parsley-required' => '', 'data-parsley-min'=>'0', 'data-parsley-max'=>'1000', 'data-parsley-type'=>'integer' ) )}}
-                    @if ($errors->first('qty'))
-                        <p class="text-danger">
-                            {{ $errors->first('qty') }}
-                        </p>
-                    @endif
-
-                    {{Form::label('price','Price: ')}}
-                    {{Form::text( 'price',null,array('class' => 'form-control', 'data-parsley-required' => '', 'data-parsley-min'=>'1', 'data-parsley-type'=>"number" ) )}}
-                    @if ($errors->first('price'))
-                        <p class="text-danger">
-                            {{ $errors->first('price') }}
-                        </p>
-                    @endif
-
-                    {{Form::label('featured_image','Featured Image: ')}}
-                    <img src="{{ asset('public/'.$product->thumb_image) }}" class="img-responsive">
-                    <br>
-                    <input type="file" name="featured_image" id="multiupload" class="form-control">
-                    @if ($errors->first('featured_image'))
-                        <p class="text-danger">
-                            {{ $errors->first('featured_image') }}
-                        </p>
-                    @endif
-
-
-            		{{Form::label('description','Description: ')}}
-            		{{Form::textarea( 'description',null,array('class' => 'form-control') )}}
-            		@if ($errors->first('description'))
-        			    <p class="text-danger">
-        			        {{ $errors->first('description') }}
-        			    </p>
-        			@endif
-
-                    {{Form::label('product_info','Product Information: ')}}
-                    {{Form::textarea( 'product_info',null,array('class' => 'form-control') )}}
-                    @if ($errors->first('product_info'))
-                        <p class="text-danger">
-                            {{ $errors->first('product_info') }}
-                        </p>
-                    @endif
-                    {{-- <input type="hidden" id="image_test">
-                    <img src="{{ asset('public/files/default.png') }}" onclick="elFinderBrowser(this)" height="100px"> --}}
-            		{{Form::submit('Update Product',array('class'=> 'btn btn-success btn-lg btn-block','style'=> 'margin-top:20px;' )) }}
-
-            	{!! Form::close() !!}
+                </div>
             </div>
         </div>
     </div>
 @endsection
 @section('scripts')
-	{!! Html::script("public/js/parsley.min.js") !!}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
-    <script src="//cloud.tinymce.com/stable/tinymce.min.js?apiKey=9ic9deq566guw4ojcjan0hunss4jkx3xuy8xgsvzh6lz8hwd"></script>
     <script type="text/javascript">
-        $("#my-select").select2();
-        tinymce.init({ 
-            selector : 'textarea',
-            theme: 'modern',
-            plugins: [
-                'advlist autolink lists link image charmap print preview hr anchor pagebreak',
-                'searchreplace wordcount visualblocks visualchars code fullscreen',
-                'insertdatetime media nonbreaking save table contextmenu directionality',
-                'emoticons template paste textcolor colorpicker textpattern imagetools codesample toc'
-            ],
-            toolbar1: 'undo redo | insert | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
-            toolbar2: 'print preview media | forecolor backcolor emoticons | codesample',
-            image_advtab: true,
-            templates: [
-                { title: 'Lorem Ipsum', content: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.' }
-            ],
-            content_css: [
-                '//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
-                '//www.tinymce.com/css/codepen.min.css'
-            ],
-            file_browser_callback : elFinderBrowser
-         });
-        function elFinderBrowser (field_name, url, type, win) {
-            tinymce.activeEditor.windowManager.open({
-                file: '<?php echo route("elfinder.tinymce4"); ?>',// use an absolute path!
-                title: 'elFinder 2.0',
-                width: 900,
-                height: 450,
-                resizable: 'yes'
-            }, {
-            setUrl: function (url,file) {
-                if (typeof win !== 'undefined') {
-                    win.document.getElementById(field_name).value = url;
+        $("#search_loader").hide();
+        $("form[name='product_edit']").submit(function(e) {
+            $("#search_loader").show();
+            var form = this;
+            var formData = new FormData(form);
+            $("p.text-danger").html('');
+            $.ajax({
+                type:'POST',
+                url:"{{ route('products.update_product',$data['product']->id) }}",
+                data:formData,
+                async: false,
+                success:function(response){
+                    window.location.href = document.URL;
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                error: function (err) {
+                    $.each(err.responseJSON, function( index, value ) {
+                        var error = '';
+                        $.each(value, function( i_index, i_value ) {
+                            if (i_value.indexOf("###")) 
+                                i_value = i_value.replace("###"," ");
+                            error = error + i_value + "<br>";
+                        });
+                        if (index.indexOf("###")) 
+                            index = index.split("###")[0];
+                        $("p.text-danger."+index+"").html(error);
+                    });
+                    $("#search_loader").hide();
                 }
-                else{
-                    field_name.previousElementSibling.value = file.path;
-                    field_name.src = file.tmb;
-                    console.log(file);
-                }
-            }
-          });
-          return false;
-        }
+            });
+            e.preventDefault();
+        });
     </script>
 @endsection

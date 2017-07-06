@@ -1,9 +1,12 @@
 <?php
 $cur_route = Route::currentRouteName();
 $dashboard = ($cur_route == 'admin.dashboard')?'active':'';
+$users = ($cur_route == 'CmsController.getusers')?'active':'';
 $categories = ($cur_route == 'categories.index' || $cur_route == 'categories.create' || $cur_route == 'categories.edit')?'active':'';
 $categories_list = ($cur_route == 'categories.index' || $cur_route == 'categories.edit')?'active':'';
 $categories_add = ($cur_route == 'categories.create')?'active':'';
+$products = ($cur_route == 'products.index' || $cur_route == 'products.edit')?'active':'';
+
 ?>
 <div class="page-sidebar-wrapper">
     <div class="page-sidebar navbar-collapse collapse">
@@ -26,6 +29,12 @@ $categories_add = ($cur_route == 'categories.create')?'active':'';
                 <span class="title">Dashboard</span>
                 </a>
             </li>
+            <li class="{{$users}}">
+                <a href="{{route('CmsController.getusers')}}">
+                <i class="fa fa-users"></i> 
+                <span class="title">User Management</span>
+                </a>
+            </li>
             <li class="{{$categories}}">
                 <a href="javascript:;">
                 <i class="fa fa-building" aria-hidden="true"></i>
@@ -44,6 +53,12 @@ $categories_add = ($cur_route == 'categories.create')?'active':'';
                         Add Category</a>
                     </li>
                 </ul>
+            </li>
+            <li class="{{$products}}">
+                <a href="{{route('products.index')}}">
+                <i class="fa fa-cubes"></i> 
+                <span class="title">Product Management</span>
+                </a>
             </li>
         </ul>
         <!-- END SIDEBAR MENU -->

@@ -25,7 +25,14 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $data['title'] = 'Admin: Categories';
-        $data['categories'] = Category::all();
+        $data['all_categories'] = Category::all();
+        $data['root_categories'] = Category::where('parent',0)->get();
+        if (!empty($data['root_categories'])) {
+            $data['cat_select'][0] = "Select Category";
+            foreach ($data['root_categories'] as $cat)
+                $data['cat_select'][$cat->id] = $cat->name;
+        }
+        $data['categories'] = Category::filter_category($request)->orderby('id','desc')->paginate(30);
         return view('backend.category.index')->withData($data);
     }
 
@@ -72,7 +79,7 @@ class CategoryController extends Controller
             $category->parent = 0;
         $category->save();
 
-        $request->session()->flash('success_msg', "The Category added successfully! ");
+        $request->session()->flash('success_msg', "The Category added successfully.! ");
 
         return redirect()->route('categories.index');
     }
@@ -88,10 +95,11 @@ class CategoryController extends Controller
     {
         $data['title'] = 'Admin: Edit Category';
         $data['category'] = Category::find($id);
-        $data['categories'] = Category::where('parent',0)->where('id', '!=' ,$id)->get();
+        $data['categories'] = Category::all();
+        $data['root_categories'] = Category::where('parent',0)->get();
         $data['cat_select'] = array();
-        if (count($data['categories'])>0) {
-            foreach ($data['categories'] as $cat)
+        if (!empty($data['root_categories'])) {
+            foreach ($data['root_categories'] as $cat)
                 $data['cat_select'][$cat->id] = $cat->name;
         }
         return view('backend.category.edit')->withData($data);
@@ -130,7 +138,7 @@ class CategoryController extends Controller
 
         $category->save();
 
-        $request->session()->flash('success_msg','The category updated successfully!');
+        $request->session()->flash('success_msg','The category updated successfully.');
 
         return redirect()->route('categories.index');
     }
@@ -144,25 +152,33 @@ class CategoryController extends Controller
     public function destroy(Request $request,$id)
     {
         $category = Category::find($id);
-
-        $category->delete();
-
-        $request->session()->flash('success_msg' , 'The Category deleted successfully');
+        if (!empty($category)) {
+            $category->delete();
+            $request->session()->flash('success_msg' , 'The Category deleted successfully.');
+        }
+        else{
+            $request->session()->flash('success_error' , 'The Category not found.Please try again.');
+        }
 
         return redirect()->route('categories.index');
     }
+    
     public function status(Request $request,$id)
     {
         $category = Category::find($id);
+        if (!empty($category)) {
+            if ($category->status) 
+                $category->status = 0;
+            else
+                $category->status = 1;
 
-        if ($category->status) 
-            $category->status = 0;
-        else
-            $category->status = 1;
+            $category->save();
 
-        $category->save();
-
-        $request->session()->flash('success_msg' , 'The Category status updated successfully');
+            $request->session()->flash('success_msg' , 'The Category status updated successfully..');
+        }
+        else{
+            $request->session()->flash('success_error' , 'The Category not found.Please try again.');
+        }
 
         return redirect()->route('categories.index');
     }
